@@ -109,7 +109,7 @@ public class AudioPeer : MonoBehaviour {
 
     void CreateSampleBuffer()
     {
-        for (int i = 0; i < 512; i++)
+        for (int i = 0; i < m_sampleArray.Length; i++)
         {
             if (m_sampleArray[i] > m_sampleBuffer[i])
             {

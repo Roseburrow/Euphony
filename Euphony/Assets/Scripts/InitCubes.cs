@@ -5,11 +5,17 @@ using UnityEngine;
 public class InitCubes : MonoBehaviour
 {
     public GameObject m_cubePrefab;
-    GameObject[] m_sampleCubes = new GameObject[512];
-    public float m_maxScale;
-    public bool m_bufferActive;
 
-    public int circleSize = 100;
+    GameObject[] m_sampleCubes = new GameObject[512];
+
+    public float m_maxScale;
+    public float clampVal;
+    float newScale;
+
+    public int circleSize;
+
+    public bool m_bufferActive;
+    public bool clamp;
 
     // Use this for initialization
     void Start()
@@ -55,19 +61,25 @@ public class InitCubes : MonoBehaviour
             {
                 //Scales the object every frame based on the sample data from the audio peer.
                 //The +2 is the starting scale for each cube.
-
                 if (m_bufferActive)
                 {
-                    m_sampleCubes[i].transform.localScale = new Vector3(1, (AudioPeer.m_sampleBuffer[i] * m_maxScale) + 2, 1);
-                    //m_sampleCubes[i].transform.localPosition = new Vector3(m_sampleCubes[i].transform.localPosition.x, 
-                    //m_sampleCubes[i].transform.localScale.y / 2, 
-                    //m_sampleCubes[i].transform.localPosition.z);
+                    newScale = (AudioPeer.m_sampleBuffer[i] * m_maxScale) + 2;
+                }
+                else
+                {
+                    newScale = (AudioPeer.m_sampleArray[i] * m_maxScale) + 2;
                 }
 
-                if (!m_bufferActive)
+                if (clamp)
                 {
-                    m_sampleCubes[i].transform.localScale = new Vector3(1, (AudioPeer.m_sampleArray[i] * m_maxScale) + 2, 1);
+                    newScale = Mathf.Clamp(newScale, 0, clampVal);
                 }
+
+                m_sampleCubes[i].transform.localScale = new Vector3(1, newScale, 1);
+                
+                //m_sampleCubes[i].transform.localPosition = new Vector3(m_sampleCubes[i].transform.localPosition.x, 
+                    //m_sampleCubes[i].transform.localScale.y / 2, 
+                    //m_sampleCubes[i].transform.localPosition.z);
             }
         }
     }
