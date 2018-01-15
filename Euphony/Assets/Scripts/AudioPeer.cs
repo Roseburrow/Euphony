@@ -12,8 +12,12 @@ public class AudioPeer : MonoBehaviour {
     public static float[] m_sampleBuffer = new float[512];
     float[] m_sampleDecrease = new float[512];
 
-    public static float[] m_freqBoundaries = new float[8];
-    public static float[] m_boundaryBuffer = new float[8];
+    public static float[] m_freqBoundaries = new float[8]; //Replaced by the arrays below.
+    public static float[] m_boundaryBuffer = new float[8]; //Same as above.
+
+    float[] m_highestFreqValues = new float[8];
+    public static float[] m_freqBoundsData = new float[8];
+    public static float[] m_freqBuffersData = new float[8];
 
     /*Every time the freqB is higher than the boundB:
      *boundB = freqB.
@@ -37,6 +41,8 @@ public class AudioPeer : MonoBehaviour {
         CreateFrequencyBoundaries(); //Splites the 512 samples into 8 sections for each bar.
         CreateBoundaryBuffer(); //Manages the buffers used to steady the bars during playback.
         CreateSampleBuffer();
+
+        CreateFrequencyBounds();
 	}
 
     void GetSpectrumSource()
@@ -44,6 +50,19 @@ public class AudioPeer : MonoBehaviour {
         //Reads samples from the given source in real time into the array only 512 big.
         //This is essentially our audio stream...
         m_audioSource.GetSpectrumData(m_sampleArray, 0, FFTWindow.Rectangular);
+    }
+
+    void CreateFrequencyBounds()
+    {
+        for (int i = 0; i < 8; i++)
+        {
+            if (m_freqBoundaries[i] > m_highestFreqValues[i])
+            {
+                m_highestFreqValues[i] = m_freqBoundaries[i];
+            }
+            m_freqBoundsData[i] = (m_freqBoundaries[i] / m_highestFreqValues[i]);
+            m_freqBuffersData[i] = (m_boundaryBuffer[i] / m_highestFreqValues[i]);
+        }
     }
 
     void CreateFrequencyBoundaries()

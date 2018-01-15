@@ -9,9 +9,12 @@ public class BarCubes : MonoBehaviour {
     public float m_scaleMultiplier;
     public bool m_bufferActive;
 
+    Material material;
+
 	// Use this for initialization
-	void Start () {
-		
+	void Start ()
+    {
+        material = GetComponent<MeshRenderer>().materials[0];
 	}
 	
 	// Update is called once per frame
@@ -22,6 +25,9 @@ public class BarCubes : MonoBehaviour {
         {
             transform.localScale = new Vector3(transform.localScale.x,
                                   (AudioPeer.m_boundaryBuffer[m_bar] * m_scaleMultiplier) + m_startScale, transform.localScale.z);
+
+            Color cubeColour = new Color(AudioPeer.m_freqBuffersData[m_bar], AudioPeer.m_freqBuffersData[m_bar], AudioPeer.m_freqBuffersData[m_bar]);
+            material.SetColor("_EmissionColor", cubeColour);
         }
 
         //or not.
@@ -29,6 +35,9 @@ public class BarCubes : MonoBehaviour {
         {
             transform.localScale = new Vector3(transform.localScale.x,
                                   (AudioPeer.m_freqBoundaries[m_bar] * m_scaleMultiplier) + m_startScale, transform.localScale.z);
+
+            Color cubeColour = new Color(AudioPeer.m_freqBuffersData[m_bar], AudioPeer.m_freqBuffersData[m_bar], AudioPeer.m_freqBuffersData[m_bar]);
+            material.SetColor("_EmissionColor", cubeColour);
         }
 
         //transform.localPosition = new Vector3(transform.localPosition.x, transform.localScale.y / 2, transform.localPosition.z);
