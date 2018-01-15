@@ -63,11 +63,11 @@ public class InitCubes : MonoBehaviour
                 //The +2 is the starting scale for each cube.
                 if (m_bufferActive)
                 {
-                    newScale = (AudioPeer.m_sampleBuffer[i] * m_maxScale) + 2;
+                    newScale = (AudioManager.m_sampleBuffer[i] * m_maxScale) + 2;
                 }
                 else
                 {
-                    newScale = (AudioPeer.m_sampleArray[i] * m_maxScale) + 2;
+                    newScale = (AudioManager.m_sampleArray[i] * m_maxScale) + 2;
                 }
 
                 if (clamp)

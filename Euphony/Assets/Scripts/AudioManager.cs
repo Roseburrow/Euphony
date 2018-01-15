@@ -4,26 +4,28 @@ using UnityEngine;
 
 [RequireComponent (typeof (AudioSource))]
 
-public class AudioPeer : MonoBehaviour {
+public class AudioManager : MonoBehaviour {
 
-    AudioSource m_audioSource;
+    AudioSource m_audioSource; //Unity class for storing audio files.
 
-    public static float[] m_sampleArray = new float[512]; //512 samples every frame.
+    //Sample arrays for data, buffer and buffer decrease. Is 512 but can be 1024 or 2048.
+    public static float[] m_sampleArray = new float[512]; 
     public static float[] m_sampleBuffer = new float[512];
-    float[] m_sampleDecrease = new float[512];
+    float[] m_sampleBufferDecrease = new float[512];
 
-    public static float[] m_freqBoundaries = new float[8]; //Replaced by the arrays below.
-    public static float[] m_boundaryBuffer = new float[8]; //Same as above.
-
-    float[] m_highestFreqValues = new float[8];
-    public static float[] m_freqBoundsData = new float[8];
-    public static float[] m_freqBuffersData = new float[8];
-
+    //Stores average of samples in 8 frequency boundaries.
+    public static float[] m_freqBounds = new float[8];
+    public static float[] m_freqBoundsBuffer = new float[8];
+    float[] m_freqBoundsBufferDecrease = new float[8];
     /*Every time the freqB is higher than the boundB:
      *boundB = freqB.
      * 
      * If freqB is lower than boundB then it is decreased a set amount. */
-    float[] m_bufferDecrease = new float[8];
+    
+    //Arrays for ranged data.
+    float[] m_highestFreqValues = new float[8];
+    public static float[] m_rangedBounds = new float[8];
+    public static float[] m_rangedBoundsBuffer = new float[8];
 
 	// Use this for initialization
 	void Start ()
@@ -34,34 +36,32 @@ public class AudioPeer : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update ()
-    {
-        //Populates sample array every frame.
-        GetSpectrumSource();
+    { 
+        GetSpectrumSource(); //Populates sample array every frame.
 
-        CreateFrequencyBoundaries(); //Splites the 512 samples into 8 sections for each bar.
-        CreateBoundaryBuffer(); //Manages the buffers used to steady the bars during playback.
-        CreateSampleBuffer();
-
-        CreateFrequencyBounds();
+        CreateFrequencyBoundaries(); //Splits samples into 8 catagories.
+        CreateBoundaryBuffer(); //Creates buffer for divided boudnaries.
+        CreateSampleBuffer(); //Create buffer for sample data. 
+        CreateRangedBounds(); //Creates ranged buffer and values.
 	}
 
     void GetSpectrumSource()
     {
         //Reads samples from the given source in real time into the array only 512 big.
         //This is essentially our audio stream...
-        m_audioSource.GetSpectrumData(m_sampleArray, 0, FFTWindow.Rectangular);
+        m_audioSource.GetSpectrumData(m_sampleArray, 0, FFTWindow.BlackmanHarris);
     }
 
-    void CreateFrequencyBounds()
+    void CreateRangedBounds()
     {
         for (int i = 0; i < 8; i++)
         {
-            if (m_freqBoundaries[i] > m_highestFreqValues[i])
+            if (m_freqBounds[i] > m_highestFreqValues[i])
             {
-                m_highestFreqValues[i] = m_freqBoundaries[i];
+                m_highestFreqValues[i] = m_freqBounds[i];
             }
-            m_freqBoundsData[i] = (m_freqBoundaries[i] / m_highestFreqValues[i]);
-            m_freqBuffersData[i] = (m_boundaryBuffer[i] / m_highestFreqValues[i]);
+            m_rangedBounds[i] = (m_freqBounds[i] / m_highestFreqValues[i]);
+            m_rangedBoundsBuffer[i] = (m_freqBoundsBuffer[i] / m_highestFreqValues[i]);
         }
     }
 
@@ -86,9 +86,8 @@ public class AudioPeer : MonoBehaviour {
                 avg += m_sampleArray[counter] * (counter + 1);
                 counter++;
             }
-
             avg /= counter;
-            m_freqBoundaries[i] = avg * 10;
+            m_freqBounds[i] = avg * 10;
         }
     }
 
@@ -100,28 +99,28 @@ public class AudioPeer : MonoBehaviour {
          * which is why these values are modified. */
         for (int i = 0; i < 8; i++)
         {
-            if (m_freqBoundaries[i] > m_boundaryBuffer[i])
+            if (m_freqBounds[i] > m_freqBoundsBuffer[i])
             {
                 /*If the current frequency of the bar is higher that the buffer
                  *then that is ok as the bar needs to go to the correct height,
                  * so we make the buffer equal the current frequency value. */
-                m_boundaryBuffer[i] = m_freqBoundaries[i];
+                m_freqBoundsBuffer[i] = m_freqBounds[i];
 
                 /*We then have to set a suitable decrease amount for when the
                  * bar falls back below the highest frequency as the bar will
                  * have to be lowered down. */
-                m_bufferDecrease[i] = 0.010f;
+                m_freqBoundsBufferDecrease[i] = 0.010f;
             }
 
-            if (m_freqBoundaries[i] < m_boundaryBuffer[i])
+            if (m_freqBounds[i] < m_freqBoundsBuffer[i])
             {
                 /*If the buffer is higher than the current frequency value then
                  *the new frequency reading is lower than the previous meaning
                  *the bar has to be lowered. In this case we lower the buffer by
                  *the decrease amount. We then change the buffer decrease by a
                  * multiplier so it will lower faster and faster. */
-                m_boundaryBuffer[i] -= m_bufferDecrease [i];
-                m_bufferDecrease[i] *= 1.2f;
+                m_freqBoundsBuffer[i] -= m_freqBoundsBufferDecrease [i];
+                m_freqBoundsBufferDecrease[i] *= 1.2f;
             }
         }
     }
@@ -133,13 +132,13 @@ public class AudioPeer : MonoBehaviour {
             if (m_sampleArray[i] > m_sampleBuffer[i])
             {
                 m_sampleBuffer[i] = m_sampleArray[i];
-                m_sampleDecrease[i] = 0.0001f;
+                m_sampleBufferDecrease[i] = 0.0001f;
             }
 
             if (m_sampleArray[i] < m_sampleBuffer[i])
             {
-                m_sampleBuffer[i] -= m_sampleDecrease[i];
-                m_sampleDecrease[i] *= 1.3f;
+                m_sampleBuffer[i] -= m_sampleBufferDecrease[i];
+                m_sampleBufferDecrease[i] *= 1.3f;
             }
         }
     }
