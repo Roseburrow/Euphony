@@ -31,16 +31,16 @@ public class InitCubes : MonoBehaviour
 
             //Makes the cube a child of this object which is initialising the cubes.
             cubeInstance.transform.parent = this.transform;
-            cubeInstance.name = "SampleCube" + i;
+            cubeInstance.name = "SampleCube_" + i;
 
             //Work  out circle spacing by doing 360 / sample number so in this instance:
             //360 / 512 = 0.703125...
 
             //DRAW AS A CIRCLE
-            this.transform.eulerAngles = new Vector3(0, -0.703125f * i, 0);
+            //this.transform.eulerAngles = new Vector3(0, -0.703125f * i, 0);
 
             //DRAW AS A LINE! 
-            //this.transform.position = this.transform.position + new Vector3(1, 0, 0);
+            this.transform.position = this.transform.position + new Vector3(1, 0, 0);
 
             //Moves each cube forward the given amount (depends on cube size).
             cubeInstance.transform.position = Vector3.forward * circleSize;
@@ -67,7 +67,7 @@ public class InitCubes : MonoBehaviour
                 }
                 else
                 {
-                    newScale = (AudioManager.m_sampleArray[i] * m_maxScale) + 2;
+                    newScale = (AudioManager.m_sampleArrayLeft[i] * m_maxScale) + 2;
                 }
 
                 if (clamp)

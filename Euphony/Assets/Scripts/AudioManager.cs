@@ -2,14 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent (typeof (AudioSource))]
+[RequireComponent(typeof(AudioSource))]
 
-public class AudioManager : MonoBehaviour {
+public class AudioManager : MonoBehaviour
+{
 
     AudioSource m_audioSource; //Unity class for storing audio files.
 
     //Sample arrays for data, buffer and buffer decrease. Is 512 but can be 1024 or 2048.
-    public static float[] m_sampleArray = new float[512]; 
+    public static float[] m_sampleArrayLeft = new float[512];
+    public static float[] m_sampleArrayRight = new float[512];
     public static float[] m_sampleBuffer = new float[512];
     float[] m_sampleBufferDecrease = new float[512];
 
@@ -21,35 +23,50 @@ public class AudioManager : MonoBehaviour {
      *boundB = freqB.
      * 
      * If freqB is lower than boundB then it is decreased a set amount. */
-    
+
     //Arrays for ranged data.
     float[] m_highestFreqValues = new float[8];
+    public float startingHighest;
     public static float[] m_rangedBounds = new float[8];
     public static float[] m_rangedBoundsBuffer = new float[8];
 
-	// Use this for initialization
-	void Start ()
+    public enum channels { Stereo, Right, Left };
+    public channels channel = new channels();
+
+    // Use this for initialization
+    void Start()
     {
         //Takes the audio source from the unity project and sets it as the source to use.
         m_audioSource = GetComponent<AudioSource>();
-	}
-	
-	// Update is called once per frame
-	void Update ()
-    { 
+        SetStartingHighest();
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
         GetSpectrumSource(); //Populates sample array every frame.
 
         CreateFrequencyBoundaries(); //Splits samples into 8 catagories.
         CreateBoundaryBuffer(); //Creates buffer for divided boudnaries.
         CreateSampleBuffer(); //Create buffer for sample data. 
         CreateRangedBounds(); //Creates ranged buffer and values.
-	}
+
+    }
 
     void GetSpectrumSource()
     {
         //Reads samples from the given source in real time into the array only 512 big.
         //This is essentially our audio stream...
-        m_audioSource.GetSpectrumData(m_sampleArray, 0, FFTWindow.BlackmanHarris);
+        m_audioSource.GetSpectrumData(m_sampleArrayLeft, 0, FFTWindow.BlackmanHarris);
+        m_audioSource.GetSpectrumData(m_sampleArrayRight, 1, FFTWindow.BlackmanHarris);
+    }
+
+    void SetStartingHighest()
+    {
+        for (int i = 0; i < 8; i++)
+        {
+            m_highestFreqValues[i] += startingHighest;
+        }
     }
 
     void CreateRangedBounds()
@@ -81,9 +98,20 @@ public class AudioManager : MonoBehaviour {
             if (i == 7)
                 sampleCounter += 2;
 
-            for (int j =0; j < sampleCounter; j++)
+            for (int j = 0; j < sampleCounter; j++)
             {
-                avg += m_sampleArray[counter] * (counter + 1);
+                if (channel == channels.Stereo)
+                {
+                    avg += (m_sampleArrayLeft[counter] + m_sampleArrayRight[counter]) * (counter + 1);
+                }
+                if (channel == channels.Right)
+                {
+                    avg += m_sampleArrayRight[counter] * (counter + 1);
+                }
+                if (channel == channels.Left)
+                {
+                    avg += m_sampleArrayLeft[counter] * (counter + 1);
+                }
                 counter++;
             }
             avg /= counter;
@@ -119,7 +147,7 @@ public class AudioManager : MonoBehaviour {
                  *the bar has to be lowered. In this case we lower the buffer by
                  *the decrease amount. We then change the buffer decrease by a
                  * multiplier so it will lower faster and faster. */
-                m_freqBoundsBuffer[i] -= m_freqBoundsBufferDecrease [i];
+                m_freqBoundsBuffer[i] -= m_freqBoundsBufferDecrease[i];
                 m_freqBoundsBufferDecrease[i] *= 1.2f;
             }
         }
@@ -127,15 +155,15 @@ public class AudioManager : MonoBehaviour {
 
     void CreateSampleBuffer()
     {
-        for (int i = 0; i < m_sampleArray.Length; i++)
+        for (int i = 0; i < m_sampleArrayLeft.Length; i++)
         {
-            if (m_sampleArray[i] > m_sampleBuffer[i])
+            if (m_sampleArrayLeft[i] > m_sampleBuffer[i])
             {
-                m_sampleBuffer[i] = m_sampleArray[i];
+                m_sampleBuffer[i] = m_sampleArrayLeft[i];
                 m_sampleBufferDecrease[i] = 0.0001f;
             }
 
-            if (m_sampleArray[i] < m_sampleBuffer[i])
+            if (m_sampleArrayLeft[i] < m_sampleBuffer[i])
             {
                 m_sampleBuffer[i] -= m_sampleBufferDecrease[i];
                 m_sampleBufferDecrease[i] *= 1.3f;
