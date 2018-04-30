@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,13 +8,14 @@ using UnityEngine;
 public class AudioManager : MonoBehaviour
 {
 
-    AudioSource m_audioSource; //Unity class for storing audio files.
+    public static AudioSource m_AudioSource; //Unity class for storing audio files.
+    public int m_SamplesTaken = 512;
 
     //Sample arrays for data, buffer and buffer decrease. Is 512 but can be 1024 or 2048.
-    public static float[] m_sampleArrayLeft = new float[512];
-    public static float[] m_sampleArrayRight = new float[512];
-    public static float[] m_sampleBuffer = new float[512];
-    float[] m_sampleBufferDecrease = new float[512];
+    public static float[] m_SamplesLeft;
+    public static float[] m_SamplesRight;
+    public static float[] m_SampleBuffer;
+    float[] m_SampleBufferDecrease;
 
     //Stores average of samples in 8 frequency boundaries.
     public static float[] m_freqBounds = new float[8];
@@ -37,7 +39,11 @@ public class AudioManager : MonoBehaviour
     void Start()
     {
         //Takes the audio source from the unity project and sets it as the source to use.
-        m_audioSource = GetComponent<AudioSource>();
+        m_AudioSource = GetComponent<AudioSource>();
+        m_SamplesLeft = new float[m_SamplesTaken];
+        m_SamplesRight = new float[m_SamplesTaken];
+        m_SampleBuffer = new float[m_SamplesTaken];
+        m_SampleBufferDecrease = new float[m_SamplesTaken];
         SetStartingHighest();
     }
 
@@ -57,8 +63,8 @@ public class AudioManager : MonoBehaviour
     {
         //Reads samples from the given source in real time into the array only 512 big.
         //This is essentially our audio stream...
-        m_audioSource.GetSpectrumData(m_sampleArrayLeft, 0, FFTWindow.BlackmanHarris);
-        m_audioSource.GetSpectrumData(m_sampleArrayRight, 1, FFTWindow.BlackmanHarris);
+        m_AudioSource.GetSpectrumData(m_SamplesLeft, 0, FFTWindow.BlackmanHarris);
+        m_AudioSource.GetSpectrumData(m_SamplesRight, 1, FFTWindow.BlackmanHarris);
     }
 
     void SetStartingHighest()
@@ -102,15 +108,15 @@ public class AudioManager : MonoBehaviour
             {
                 if (channel == channels.Stereo)
                 {
-                    avg += (m_sampleArrayLeft[counter] + m_sampleArrayRight[counter]) * (counter + 1);
+                    avg += (m_SamplesLeft[counter] + m_SamplesRight[counter]) * (counter + 1);
                 }
                 if (channel == channels.Right)
                 {
-                    avg += m_sampleArrayRight[counter] * (counter + 1);
+                    avg += m_SamplesRight[counter] * (counter + 1);
                 }
                 if (channel == channels.Left)
                 {
-                    avg += m_sampleArrayLeft[counter] * (counter + 1);
+                    avg += m_SamplesLeft[counter] * (counter + 1);
                 }
                 counter++;
             }
@@ -155,18 +161,18 @@ public class AudioManager : MonoBehaviour
 
     void CreateSampleBuffer()
     {
-        for (int i = 0; i < m_sampleArrayLeft.Length; i++)
+        for (int i = 0; i < m_SamplesLeft.Length; i++)
         {
-            if (m_sampleArrayLeft[i] > m_sampleBuffer[i])
+            if (m_SamplesLeft[i] > m_SampleBuffer[i])
             {
-                m_sampleBuffer[i] = m_sampleArrayLeft[i];
-                m_sampleBufferDecrease[i] = 0.0001f;
+                m_SampleBuffer[i] = m_SamplesLeft[i];
+                m_SampleBufferDecrease[i] = 0.0001f;
             }
 
-            if (m_sampleArrayLeft[i] < m_sampleBuffer[i])
+            if (m_SamplesLeft[i] < m_SampleBuffer[i])
             {
-                m_sampleBuffer[i] -= m_sampleBufferDecrease[i];
-                m_sampleBufferDecrease[i] *= 1.3f;
+                m_SampleBuffer[i] -= m_SampleBufferDecrease[i];
+                m_SampleBufferDecrease[i] *= 1.3f;
             }
         }
     }

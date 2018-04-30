@@ -7,6 +7,8 @@ public class InitCubes : MonoBehaviour
     public GameObject m_cubePrefab;
 
     GameObject[] m_sampleCubes = new GameObject[512];
+    public enum channels { Stereo, Right, Left };
+    public channels channel = new channels();
 
     public float m_maxScale;
     public float clampVal;
@@ -20,7 +22,13 @@ public class InitCubes : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        //Done for every cube...
+        for (int i = 0; i < m_sampleCubes.Length; i++)
+        {
+            //Instantiate cube and add it to the sampleCube Array, each cubes parent will be this gameobject. 
+            m_sampleCubes[i] = Instantiate(m_cubePrefab, new Vector3(transform.position.x + i, transform.position.y, transform.position.z), transform.rotation, transform);
+        }
+        #region OLDSPAWNING
+        /*Done for every cube...
         for (int i = 0; i < m_sampleCubes.Length; i++)
         {
             //Creates a cube in the game based off of the prefab passed in to it.
@@ -47,9 +55,10 @@ public class InitCubes : MonoBehaviour
 
             //Adds instance of the created cube to the list.
             m_sampleCubes[i] = cubeInstance;
-        }
+        } */
+        #endregion
     }
-    
+
     // Update is called once per frame
     void Update()
     {
@@ -63,11 +72,22 @@ public class InitCubes : MonoBehaviour
                 //The +2 is the starting scale for each cube.
                 if (m_bufferActive)
                 {
-                    newScale = (AudioManager.m_sampleBuffer[i] * m_maxScale) + 2;
+                    newScale = (AudioManager.m_SampleBuffer[i] * m_maxScale) + 2;
                 }
                 else
                 {
-                    newScale = (AudioManager.m_sampleArrayLeft[i] * m_maxScale) + 2;
+                    if (channel == channels.Left)
+                    {
+                        newScale = (AudioManager.m_SamplesLeft[i] * m_maxScale) + 2;
+                    }
+                    else if (channel == channels.Right)
+                    {
+                        newScale = (AudioManager.m_SamplesRight[i] * m_maxScale) + 2;
+                    }
+                    else if (channel == channels.Stereo)
+                    {
+                        newScale = (AudioManager.m_SamplesLeft[i] + AudioManager.m_SamplesRight[i] * m_maxScale) + 2;
+                    }
                 }
 
                 if (clamp)
@@ -76,10 +96,6 @@ public class InitCubes : MonoBehaviour
                 }
 
                 m_sampleCubes[i].transform.localScale = new Vector3(1, newScale, 1);
-                
-                //m_sampleCubes[i].transform.localPosition = new Vector3(m_sampleCubes[i].transform.localPosition.x, 
-                    //m_sampleCubes[i].transform.localScale.y / 2, 
-                    //m_sampleCubes[i].transform.localPosition.z);
             }
         }
     }
