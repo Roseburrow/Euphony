@@ -24,9 +24,11 @@ public class BarCubes : MonoBehaviour {
         if (m_bufferActive)
         {
             transform.localScale = new Vector3(transform.localScale.x,
-                                  (AudioManager.m_freqBoundsBuffer[m_bar] * m_scaleMultiplier) + m_startScale, transform.localScale.z);
+                                  (DividedAudioBands.m_freqBoundsBuffer[m_bar] * m_scaleMultiplier) + m_startScale, transform.localScale.z);
 
-            Color cubeColour = new Color(AudioManager.m_rangedBoundsBuffer[m_bar], AudioManager.m_rangedBoundsBuffer[m_bar], AudioManager.m_rangedBoundsBuffer[m_bar]);
+            Color cubeColour = new Color(DividedRangedValues.m_rangedBoundsBuffer[m_bar],
+                                         DividedRangedValues.m_rangedBoundsBuffer[m_bar],
+                                         DividedRangedValues.m_rangedBoundsBuffer[m_bar]);
             material.SetColor("_EmissionColor", cubeColour);
         }
 
@@ -34,9 +36,11 @@ public class BarCubes : MonoBehaviour {
         if (!m_bufferActive)
         {
             transform.localScale = new Vector3(transform.localScale.x,
-                                  (AudioManager.m_freqBounds[m_bar] * m_scaleMultiplier) + m_startScale, transform.localScale.z);
+                                  (DividedAudioBands.m_freqBounds[m_bar] * m_scaleMultiplier) + m_startScale, transform.localScale.z);
 
-            Color cubeColour = new Color(AudioManager.m_rangedBoundsBuffer[m_bar], AudioManager.m_rangedBoundsBuffer[m_bar], AudioManager.m_rangedBoundsBuffer[m_bar]);
+            Color cubeColour = new Color(DividedRangedValues.m_rangedBoundsBuffer[m_bar],
+                                         DividedRangedValues.m_rangedBoundsBuffer[m_bar],
+                                         DividedRangedValues.m_rangedBoundsBuffer[m_bar]);
             material.SetColor("_EmissionColor", cubeColour);
         }
     }

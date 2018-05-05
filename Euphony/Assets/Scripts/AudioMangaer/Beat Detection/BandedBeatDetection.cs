@@ -1,18 +1,69 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
+﻿using UnityEngine;
+using System;
+using System.Diagnostics;
 
-namespace Assets.Scripts.Beat_Detection
+[RequireComponent(typeof(AudioSource))]
+public class BandedBeatDetection : MonoBehaviour
 {
-    [RequireComponent(typeof(AudioSource))]
-    public class BeatDetector : MonoBehaviour
+    //The audisource playing
+    AudioSource m_AudioSource;
+
+    public FFTWindow m_FFTWindow;
+    public static AudioBand[] Bands;
+    public int m_NumberOfBands;
+
+    private Sampler s;
+
+    void Start()
+    {
+        m_AudioSource = GetComponent<AudioSource>();
+        s = GetComponent<Sampler>();
+
+        Bands = new AudioBand[m_NumberOfBands];
+
+        for (int j = 0; j < Bands.Length; j++)
+        {
+            Bands[j] = new AudioBand(s);
+        }
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        GetBandsInstantEnergy();
+
+        foreach (AudioBand ab in Bands)
+        {
+            ab.Update();
+        }
+    }
+
+    void GetBandsInstantEnergy()
+    {
+        float avg = 0f;
+        int samplesPerBand = s.m_SamplesTaken / m_NumberOfBands;
+        int sampleCounter = 0;
+        int bandNumber = 0;
+
+        for (int i = 0; i < s.m_SamplesTaken; i++)
+        {
+            avg += (float)Math.Pow(Sampler.m_SamplesLeft[i], 2) + (float)Math.Pow(Sampler.m_SamplesRight[i], 2);
+            sampleCounter++;
+
+            if (sampleCounter == samplesPerBand)
+            {
+                Bands[bandNumber].m_InstantEnergy = avg;
+                avg = 0f;
+                sampleCounter = 0;
+                bandNumber++;
+            }
+        }
+    }
+
+    public class AudioBand
     {
         //The last average energy readings. Size will be 44032 / samplesTaken as this is the closest you can get to 1 second of audio.
         private float[] localHistory;
-
-        public int m_SamplesTaken; //Must be the same as the audio manager.
 
         //Determines what change in amplitude dictates a beat. Variance is used in this calculation.
         public float m_Sensitivity;
@@ -21,24 +72,18 @@ namespace Assets.Scripts.Beat_Detection
         //Values required for detecting if there is a beat or not.
         //Don't need to be public but are for testing.
         public float m_InstantEnergy;
-        public float m_AverageLocalEnergy;
+        private float m_AverageLocalEnergy;
 
-        public int m_Seconds = 1;
-
-        //True if a beat is detected, false otherwise.
         public static bool m_Beat;
 
-        void Start()
+        public AudioBand(Sampler s)
         {
-            int size = (m_Seconds * 44100) / m_SamplesTaken;
-            localHistory = new float[size]; //Dictated by 44032 / 1024 for 1 second of audio.
-
-            m_Beat = false;
+            int size = 44100 / s.m_SamplesTaken;
+            localHistory = new float[size];
         }
 
-        void Update()
+        public void Update()
         {
-            m_InstantEnergy = CalculateInstantEnergy(); //Calculate the instant energy based on sample arrays.
             m_AverageLocalEnergy = CalculateAverageLocalEnergy(); //Calculate the local average energy based on 43 instant energy readings.
 
             m_EnergyVariance = CalculateEnergyVariance();
@@ -48,16 +93,6 @@ namespace Assets.Scripts.Beat_Detection
             localHistory[0] = m_InstantEnergy; //Add the instant energy average to the history.
 
             m_Beat = IsBeat();
-        }
-
-        float CalculateInstantEnergy()
-        {
-            float instantEnergy = 0f;
-            for (int i = 0; i < m_SamplesTaken; i++)
-            {
-                instantEnergy += (float)Math.Pow(AudioManager.m_SamplesLeft[i], 2) + (float)Math.Pow(AudioManager.m_SamplesRight[i], 2);
-            }
-            return instantEnergy;
         }
 
         float CalculateAverageLocalEnergy()
@@ -82,8 +117,8 @@ namespace Assets.Scripts.Beat_Detection
 
         float CalculateSensitivity()
         {
-            float S = (0.0025714f * m_EnergyVariance) + 1.5142857f;
-            return S;
+            return (0.0025714f * m_EnergyVariance) + 1.5142857f;
+            //return (-0.0000015f * m_EnergyVariance) + 1.5142857f;
         }
 
         /// <summary>
@@ -115,3 +150,4 @@ namespace Assets.Scripts.Beat_Detection
         }
     }
 }
+

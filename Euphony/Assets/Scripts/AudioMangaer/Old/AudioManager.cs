@@ -9,7 +9,7 @@ public class AudioManager : MonoBehaviour
 {
 
     public static AudioSource m_AudioSource; //Unity class for storing audio files.
-    public int m_SamplesTaken = 512;
+    public int m_SamplesTaken;
 
     //Sample arrays for data, buffer and buffer decrease. Is 512 but can be 1024 or 2048.
     public static float[] m_SamplesLeft;

@@ -29,9 +29,9 @@ public class MusicalLight : MonoBehaviour {
 	// Update is called once per frame
 	void Update () 
 	{
-        m_light.intensity = (AudioManager.m_rangedBoundsBuffer[m_bar] * 
+        m_light.intensity = (DividedRangedValues.m_rangedBoundsBuffer[m_bar] * 
                             (m_MaxIntensity - m_MinIntensity)) + m_MinIntensity;
-        m_light.range = (AudioManager.m_rangedBoundsBuffer[m_bar] *
+        m_light.range = (DividedRangedValues.m_rangedBoundsBuffer[m_bar] *
                             (m_MaxRange- m_MinRange)) + m_MinRange;
 
     }
