@@ -4,8 +4,6 @@ using UnityEngine;
 
 public class DividedAudioBands : MonoBehaviour
 {
-    private Sampler sampler;
-
     public static float[] m_freqBounds = new float[8];
     public static float[] m_freqBoundsBuffer = new float[8];
     private float[] m_freqBoundsBufferDecrease = new float[8];
@@ -15,8 +13,6 @@ public class DividedAudioBands : MonoBehaviour
 
     private void Start()
     {
-        sampler = GetComponent<Sampler>();
-        sampler.m_SamplesTaken = 512;
     }
     void Update ()
     {
@@ -26,18 +22,15 @@ public class DividedAudioBands : MonoBehaviour
 
     void CreateFrequencyBoundaries()
     {
-        /* See notebook for frequency boundaries,
-         It's all about splitting the amount of samples you have between the boundaries. */
-
         int counter = 0;
         float avg = 0;
 
         //For each new bar we are creating...
-        for (int i = 0; i < 8; i++)
+        for (int i = 1; i <= 8; i++)
         {
-            int sampleCounter = (int)Mathf.Pow(2, i) * 2;
+            int sampleCounter = (int)Mathf.Pow(2, i);
 
-            if (i == 7)
+            if (i == 8)
                 sampleCounter += 2;
 
             for (int j = 0; j < sampleCounter; j++)

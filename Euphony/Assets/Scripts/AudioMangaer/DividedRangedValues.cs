@@ -13,7 +13,7 @@ public class DividedRangedValues : MonoBehaviour
     {
         for (int i = 0; i < 8; i++)
         {
-            m_highestFreqValues[i] += startingHighest;
+            m_highestFreqValues[i] = startingHighest;
         }
     }
 
